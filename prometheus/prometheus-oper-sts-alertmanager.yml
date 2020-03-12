@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: "2020-03-12T16:32:26Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: alertmanager
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: prometheus-operator
+    helm.sh/chart: prometheus-operator-0.13.4
+  name: alertmanager-prometheus-prometheus-oper-alertmanager
+  namespace: prometheus
+  ownerReferences:
+  - apiVersion: monitoring.coreos.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Alertmanager
+    name: prometheus-prometheus-oper-alertmanager
+    uid: e281a9dd-0d76-46fe-ac63-f9034547e0d3
+  resourceVersion: "13147"
+  selfLink: /apis/apps/v1/namespaces/prometheus/statefulsets/alertmanager-prometheus-prometheus-oper-alertmanager
+  uid: fe45a74a-e431-46ee-9d0f-86745ed6dd02
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      alertmanager: prometheus-prometheus-oper-alertmanager
+      app: alertmanager
+  serviceName: alertmanager-operated
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        alertmanager: prometheus-prometheus-oper-alertmanager
+        app: alertmanager
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: alertmanager
+                  app.kubernetes.io/instance: prometheus
+                  app.kubernetes.io/name: prometheus-operator
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - args:
+        - --config.file=/etc/alertmanager/config/alertmanager.yaml
+        - --cluster.listen-address=[$(POD_IP)]:9094
+        - --storage.path=/alertmanager
+        - --data.retention=120h
+        - --web.listen-address=:9093
+        - --web.external-url=http://prometheus-prometheus-oper-alertmanager.prometheus:9093
+        - --web.route-prefix=/
+        - --cluster.peer=alertmanager-prometheus-prometheus-oper-alertmanager-0.alertmanager-operated.prometheus.svc:9094
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: docker.io/bitnami/alertmanager:0.20.0-debian-10-r42
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /-/healthy
+            port: web
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: alertmanager
+        ports:
+        - containerPort: 9093
+          name: web
+          protocol: TCP
+        - containerPort: 9094
+          name: mesh-tcp
+          protocol: TCP
+        - containerPort: 9094
+          name: mesh-udp
+          protocol: UDP
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /-/ready
+            port: web
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+          requests:
+            memory: 200Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/alertmanager/config
+          name: config-volume
+        - mountPath: /alertmanager
+          name: alertmanager-prometheus-prometheus-oper-alertmanager-db
+      - args:
+        - -webhook-url=http://127.0.0.1:9093/-/reload
+        - -volume-dir=/etc/alertmanager/config
+        image: docker.io/bitnami/configmap-reload:0.3.0-debian-10-r42
+        imagePullPolicy: IfNotPresent
+        name: config-reloader
+        resources:
+          limits:
+            cpu: 100m
+            memory: 25Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/alertmanager/config
+          name: config-volume
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      serviceAccount: prometheus-prometheus-oper-alertmanager
+      serviceAccountName: prometheus-prometheus-oper-alertmanager
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - name: config-volume
+        secret:
+          defaultMode: 420
+          secretName: alertmanager-prometheus-prometheus-oper-alertmanager
+      - emptyDir: {}
+        name: alertmanager-prometheus-prometheus-oper-alertmanager-db
+  updateStrategy:
+    type: RollingUpdate
+status:
+  collisionCount: 0
+  currentReplicas: 1
+  currentRevision: alertmanager-prometheus-prometheus-oper-alertmanager-7dd58b5cc6
+  observedGeneration: 1
+  replicas: 1
+  updateRevision: alertmanager-prometheus-prometheus-oper-alertmanager-7dd58b5cc6
+  updatedReplicas: 1

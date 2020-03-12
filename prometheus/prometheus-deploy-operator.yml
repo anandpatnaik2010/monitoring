@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2020-03-12T16:32:13Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: prometheus-operator
+    helm.sh/chart: prometheus-operator-0.13.4
+  name: prometheus-prometheus-oper-operator
+  namespace: prometheus
+  resourceVersion: "13128"
+  selfLink: /apis/apps/v1/namespaces/prometheus/deployments/prometheus-prometheus-oper-operator
+  uid: 4a05fadb-5290-4e1d-80f5-5bce9f9a9cf3
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: operator
+      app.kubernetes.io/instance: prometheus
+      app.kubernetes.io/name: prometheus-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: operator
+        app.kubernetes.io/instance: prometheus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: prometheus-operator
+        helm.sh/chart: prometheus-operator-0.13.4
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: operator
+                  app.kubernetes.io/instance: prometheus
+                  app.kubernetes.io/name: prometheus-operator
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - args:
+        - --kubelet-service=kube-system/prometheus-prometheus-oper-kubelet
+        - --log-format=logfmt
+        - --log-level=info
+        - --logtostderr=true
+        - --localhost=127.0.0.1
+        - --config-reloader-image=docker.io/bitnami/configmap-reload:0.3.0-debian-10-r42
+        - --prometheus-config-reloader=docker.io/bitnami/prometheus-operator:0.37.0-debian-10-r10
+        image: docker.io/bitnami/prometheus-operator:0.37.0-debian-10-r10
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /metrics
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: prometheus-operator
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /metrics
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      serviceAccount: prometheus-prometheus-oper-operator
+      serviceAccountName: prometheus-prometheus-oper-operator
+      terminationGracePeriodSeconds: 30
+status:
+  conditions:
+  - lastTransitionTime: "2020-03-12T16:32:13Z"
+    lastUpdateTime: "2020-03-12T16:32:55Z"
+    message: ReplicaSet "prometheus-prometheus-oper-operator-785948649c" has successfully
+      progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2020-03-12T16:55:56Z"
+    lastUpdateTime: "2020-03-12T16:55:56Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  observedGeneration: 1
+  replicas: 1
+  unavailableReplicas: 1
+  updatedReplicas: 1

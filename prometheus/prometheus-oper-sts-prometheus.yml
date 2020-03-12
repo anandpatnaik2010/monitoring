@@ -1,0 +1,186 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    prometheus-operator-input-hash: "12674379383349164133"
+  creationTimestamp: "2020-03-12T16:32:36Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: prometheus-operator
+    helm.sh/chart: prometheus-operator-0.13.4
+  name: prometheus-prometheus-prometheus-oper-prometheus
+  namespace: prometheus
+  ownerReferences:
+  - apiVersion: monitoring.coreos.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Prometheus
+    name: prometheus-prometheus-oper-prometheus
+    uid: 82452000-83cd-4931-bba2-5dcd18371b9f
+  resourceVersion: "13160"
+  selfLink: /apis/apps/v1/namespaces/prometheus/statefulsets/prometheus-prometheus-prometheus-oper-prometheus
+  uid: f11fd3f7-8563-40fd-b9aa-6e9e64d1177b
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: prometheus-prometheus-oper-prometheus
+  serviceName: prometheus-operated
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: prometheus
+        prometheus: prometheus-prometheus-oper-prometheus
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: prometheus
+                  app.kubernetes.io/instance: prometheus
+                  app.kubernetes.io/name: prometheus-operator
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - args:
+        - --web.console.templates=/etc/prometheus/consoles
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --config.file=/etc/prometheus/config_out/prometheus.env.yaml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=10d
+        - --web.enable-lifecycle
+        - --storage.tsdb.no-lockfile
+        - --web.external-url=http://prometheus-prometheus-oper-prometheus.prometheus:9090
+        - --web.route-prefix=/
+        image: docker.io/bitnami/prometheus:2.16.0-debian-10-r27
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /-/healthy
+            port: web
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: prometheus
+        ports:
+        - containerPort: 9090
+          name: web
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 120
+          httpGet:
+            path: /-/ready
+            port: web
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/prometheus/config_out
+          name: config-out
+          readOnly: true
+        - mountPath: /etc/prometheus/certs
+          name: tls-assets
+          readOnly: true
+        - mountPath: /prometheus
+          name: prometheus-prometheus-prometheus-oper-prometheus-db
+        - mountPath: /etc/prometheus/rules/prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+          name: prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+      - args:
+        - --log-format=logfmt
+        - --reload-url=http://127.0.0.1:9090/-/reload
+        - --config-file=/etc/prometheus/config/prometheus.yaml.gz
+        - --config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml
+        command:
+        - /bin/prometheus-config-reloader
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        image: docker.io/bitnami/prometheus-operator:0.37.0-debian-10-r10
+        imagePullPolicy: IfNotPresent
+        name: prometheus-config-reloader
+        resources:
+          limits:
+            cpu: 100m
+            memory: 25Mi
+          requests:
+            cpu: 100m
+            memory: 25Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/prometheus/config
+          name: config
+        - mountPath: /etc/prometheus/config_out
+          name: config-out
+      - args:
+        - --webhook-url=http://127.0.0.1:9090/-/reload
+        - --volume-dir=/etc/prometheus/rules/prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+        image: docker.io/bitnami/configmap-reload:0.3.0-debian-10-r42
+        imagePullPolicy: IfNotPresent
+        name: rules-configmap-reloader
+        resources:
+          limits:
+            cpu: 100m
+            memory: 25Mi
+          requests:
+            cpu: 100m
+            memory: 25Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/prometheus/rules/prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+          name: prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      serviceAccount: prometheus-prometheus-oper-prometheus
+      serviceAccountName: prometheus-prometheus-oper-prometheus
+      terminationGracePeriodSeconds: 600
+      volumes:
+      - name: config
+        secret:
+          defaultMode: 420
+          secretName: prometheus-prometheus-prometheus-oper-prometheus
+      - name: tls-assets
+        secret:
+          defaultMode: 420
+          secretName: prometheus-prometheus-prometheus-oper-prometheus-tls-assets
+      - emptyDir: {}
+        name: config-out
+      - configMap:
+          defaultMode: 420
+          name: prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+        name: prometheus-prometheus-prometheus-oper-prometheus-rulefiles-0
+      - emptyDir: {}
+        name: prometheus-prometheus-prometheus-oper-prometheus-db
+  updateStrategy:
+    type: RollingUpdate
+status:
+  collisionCount: 0
+  currentReplicas: 1
+  currentRevision: prometheus-prometheus-prometheus-oper-prometheus-6ccbc48ccd
+  observedGeneration: 1
+  replicas: 1
+  updateRevision: prometheus-prometheus-prometheus-oper-prometheus-6ccbc48ccd
+  updatedReplicas: 1
