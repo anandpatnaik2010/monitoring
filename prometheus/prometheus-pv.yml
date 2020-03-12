@@ -1,0 +1,37 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    hostPathProvisionerIdentity: 170de5a7-647c-11ea-8e8c-000c29c26cd2
+    pv.kubernetes.io/provisioned-by: k8s.io/minikube-hostpath
+  creationTimestamp: "2020-03-12T16:46:00Z"
+  finalizers:
+  - kubernetes.io/pv-protection
+  name: pvc-61b24b9d-c6d2-4662-b36c-70ac9f19ffcd
+  resourceVersion: "12336"
+  selfLink: /api/v1/persistentvolumes/pvc-61b24b9d-c6d2-4662-b36c-70ac9f19ffcd
+  uid: 70a54a23-fc2e-42dd-befb-2ea6396e4d55
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: grafana
+    namespace: prometheus
+    resourceVersion: "12306"
+    uid: 61b24b9d-c6d2-4662-b36c-70ac9f19ffcd
+  hostPath:
+    path: /tmp/hostpath-provisioner/pvc-61b24b9d-c6d2-4662-b36c-70ac9f19ffcd
+    type: ""
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: standard
+  volumeMode: Filesystem
+status:
+  phase: Bound
